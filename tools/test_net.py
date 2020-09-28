@@ -4,7 +4,7 @@
 """Multi-view test a video classification model."""
 
 import numpy as np
-import os
+import os, pdb
 import pickle
 import torch
 from fvcore.common.file_io import PathManager
@@ -125,7 +125,7 @@ def perform_test(test_loader, model, test_meter, cfg, writer=None):
             save_path = os.path.join(cfg.OUTPUT_DIR, cfg.TEST.SAVE_RESULTS_PATH)
 
             with PathManager.open(save_path, "wb") as f:
-                pickle.dump([all_labels, all_labels], f)
+                pickle.dump([all_labels, all_preds], f)
 
             logger.info(
                 "Successfully saved prediction results to {}".format(save_path)
@@ -159,7 +159,7 @@ def test(cfg):
     model = build_model(cfg)
     if du.is_master_proc() and cfg.LOG_MODEL_INFO:
         misc.log_model_info(model, cfg, use_train_input=False)
-
+    # pdb.set_trace()
     cu.load_test_checkpoint(cfg, model)
 
     # Create video testing loaders.

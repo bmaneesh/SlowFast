@@ -3,9 +3,7 @@
 
 """Functions for computing metrics."""
 
-import torch, sys
-sys.path.append('./python_modules')
-import python_modules.ml.metrics as python_modules_metrics
+import torch
 
 
 def topks_correct(preds, labels, ks):
@@ -66,7 +64,3 @@ def topk_accuracies(preds, labels, ks):
     """
     num_topks_correct = topks_correct(preds, labels, ks)
     return [(x / preds.size(0)) * 100.0 for x in num_topks_correct]
-
-
-def nominal_metrics(preds, labels, classes):
-    return python_modules_metrics.nominal_metrics(labels, preds, classes)

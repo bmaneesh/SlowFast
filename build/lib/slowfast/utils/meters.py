@@ -252,7 +252,6 @@ class TestMeter(object):
         self.ensemble_method = ensemble_method
         # Initialize tensors.
         self.video_preds = torch.zeros((num_videos, num_cls))
-        self.video_probs = torch.zeros((num_videos, num_cls))
         if multi_label:
             self.video_preds -= 1e10
 
@@ -332,8 +331,7 @@ class TestMeter(object):
     def iter_toc(self):
         self.iter_timer.pause()
 
-    # def finalize_metrics(self, ks=(1, 5)):
-    def finalize_metrics(self, ks=(1, 2)):
+    def finalize_metrics(self, ks=(1, 5)):
         """
         Calculate and log the final ensembled metrics.
         ks (tuple): list of top-k values for topk_accuracies. For example,
@@ -371,7 +369,6 @@ class TestMeter(object):
                 stats["top{}_acc".format(k)] = "{:.{prec}f}".format(
                     topk, prec=2
                 )
-        stats.update(metrics.nominal_metrics(self.video_labels, self.video_preds.argmax(dim=1), classes=['a', 'b', 'c', 'd']))
         logging.log_json_stats(stats)
 
 

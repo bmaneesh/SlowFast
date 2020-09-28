@@ -5,7 +5,7 @@
 
 import copy
 import numpy as np
-import os, pdb
+import os
 import pickle
 from collections import OrderedDict
 import torch
@@ -182,7 +182,6 @@ def load_checkpoint(
     optimizer=None,
     inflation=False,
     convert_from_caffe2=False,
-    finetune=False
 ):
     """
     Load the checkpoint from the given file. If inflation is True, inflate the
@@ -285,8 +284,6 @@ def load_checkpoint(
             epoch = checkpoint["epoch"]
         else:
             epoch = -1
-        # if finetune:
-
     return epoch
 
 
@@ -430,7 +427,7 @@ def load_test_checkpoint(cfg, model):
         )
 
 
-def load_train_checkpoint(cfg, model, optimizer, finetune=False):
+def load_train_checkpoint(cfg, model, optimizer):
     """
     Loading checkpoint logic for training.
     """
@@ -450,7 +447,6 @@ def load_train_checkpoint(cfg, model, optimizer, finetune=False):
             optimizer,
             inflation=cfg.TRAIN.CHECKPOINT_INFLATE,
             convert_from_caffe2=cfg.TRAIN.CHECKPOINT_TYPE == "caffe2",
-            finetune=finetune
         )
         start_epoch = checkpoint_epoch + 1
     else:

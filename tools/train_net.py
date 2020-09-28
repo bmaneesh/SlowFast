@@ -73,7 +73,11 @@ def train_epoch(
             # Perform the forward pass.
             preds = model(inputs)
         # Explicitly declare reduction to mean.
-        loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean")
+        # loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean")
+        # TODO: disable the weighted loss
+        loss_fun = losses.get_loss_func(cfg.MODEL.LOSS_FUNC)(reduction="mean",
+                                                             weight=1/torch.Tensor([0.092, 0.308, 0.237, 0.362])
+                                                             .cuda(non_blocking=True))
 
         # Compute the loss.
         loss = loss_fun(preds, labels)
@@ -111,7 +115,8 @@ def train_epoch(
                 loss = loss.item()
             else:
                 # Compute the errors.
-                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                # num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                num_topks_correct = metrics.topks_correct(preds, labels, (1, 2))
                 top1_err, top5_err = [
                     (1.0 - x / preds.size(0)) * 100.0 for x in num_topks_correct
                 ]
@@ -224,7 +229,8 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg, writer=None):
                     preds, labels = du.all_gather([preds, labels])
             else:
                 # Compute the errors.
-                num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                # num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
+                num_topks_correct = metrics.topks_correct(preds, labels, (1, 2))
 
                 # Combine the errors across the GPUs.
                 top1_err, top5_err = [
@@ -387,7 +393,20 @@ def train(cfg):
     optimizer = optim.construct_optimizer(model, cfg)
 
     # Load a checkpoint to resume training if applicable.
-    start_epoch = cu.load_train_checkpoint(cfg, model, optimizer)
+    start_epoch = cu.load_train_checkpoint(cfg, model, optimizer) #, finetune=cfg.TRAIN.FINETUNE)
+
+    # train only res5 block
+    for layer, param in model.named_parameters():
+        if 'res5' not in layer and 'head.projection' not in layer:
+            param.requires_grad = False
+        else:
+            param.requires_grad = True
+    train_params = [param.requires_grad for layer, param in model.named_parameters()]
+
+    print('{0} parameters to finetune'.format(sum(train_params)))
+
+    # for layer, param in model.named_parameters():
+    #     print(layer, param.requires_grad)
 
     # Create the video train and val loaders.
     train_loader = loader.construct_loader(cfg, "train")
